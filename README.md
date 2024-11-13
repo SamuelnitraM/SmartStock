@@ -15,7 +15,7 @@ Je modifie              stock déclinaison c : 20 -> 450
 Si un client achète une quantité de 50 tous les stocks passent à 400.
 
 Stock déduction:
-Permet de donnerune valeur à soustraire au stock pour chaque déclinaison.
+Permet de donner une valeur à soustraire au stock pour chaque déclinaison.
 
 Exemple : Article Riz / stock principal : 400
                         stock déclinaison A : 400 / stock déduction : 10
