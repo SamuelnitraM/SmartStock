@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<module>
+    <name>ps_smartstock</name>
+    <displayName><![CDATA[Common Stock for Variants]]></displayName>
+    <version><![CDATA[1.0.0]]></version>
+    <author><![CDATA[SmartDev]]></author>
+    <description><![CDATA[Manages a common stock for all product combinations.]]></description>
+    <tab><![CDATA[administration]]></tab>
+    <is_configurable><![CDATA[0]]></is_configurable>
+    <need_instance><![CDATA[0]]></need_instance>
+</module>
