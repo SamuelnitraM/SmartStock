@@ -1,0 +1,139 @@
+/**
+ * SmartStock - Shared stock for product combinations.
+ *
+ * @author    SmartDev
+ * @copyright SmartDev
+ * @license   Commercial
+ */
+.smartstock-panel [hidden],
+.smartstock-dashboard [hidden] {
+  display: none !important;
+}
+
+.smartstock-panel {
+  padding: 16px;
+}
+
+.smartstock-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 12px;
+  font-size: 16px;
+}
+
+.smartstock-dashboard-link {
+  margin-left: auto;
+  font-size: 13px;
+  font-weight: normal;
+}
+
+.smartstock-help,
+.smartstock-hint {
+  color: #6c868e;
+}
+
+.smartstock-hint {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+}
+
+.smartstock-switch {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 12px 0;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.smartstock-fields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.smartstock-field {
+  flex: 1 1 200px;
+  max-width: 320px;
+}
+
+.smartstock-table td {
+  vertical-align: middle !important;
+}
+
+.smartstock-ratio {
+  max-width: 140px;
+}
+
+.smartstock-preview {
+  font-weight: 600;
+}
+
+.smartstock-preview-independent {
+  color: #6c868e;
+  font-weight: normal;
+  font-style: italic;
+}
+
+.smartstock-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.smartstock-feedback {
+  display: inline-block;
+  margin: 4px 0;
+}
+
+.smartstock-feedback-success {
+  color: #2e7d32;
+}
+
+.smartstock-feedback-error {
+  color: #c62828;
+}
+
+.smartstock-dashboard-heading {
+  display: flex !important;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.smartstock-muted {
+  color: #6c868e;
+  margin-left: 4px;
+}
+
+.smartstock-pool {
+  font-size: 15px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.smartstock-format {
+  display: inline-block;
+  margin: 2px 4px 2px 0;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: #e8f5e9;
+  white-space: nowrap;
+}
+
+.smartstock-format-empty {
+  background: #ffebee;
+}
+
+.smartstock-inline {
+  min-width: 190px;
+}
+
+.smartstock-row-busy {
+  opacity: 0.5;
+  pointer-events: none;
+}

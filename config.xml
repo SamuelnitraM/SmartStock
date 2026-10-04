@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <module>
     <name>ps_smartstock</name>
-    <displayName><![CDATA[Common Stock for Variants]]></displayName>
-    <version><![CDATA[1.0.0]]></version>
+    <displayName><![CDATA[SmartStock - Shared stock for combinations]]></displayName>
+    <version><![CDATA[2.0.0]]></version>
+    <description><![CDATA[Sells several formats of the same product (50 g, 100 g, 500 g...) from a single shared stock expressed in base units.]]></description>
     <author><![CDATA[SmartDev]]></author>
-    <description><![CDATA[Manages a common stock for all product combinations.]]></description>
     <tab><![CDATA[administration]]></tab>
-    <is_configurable><![CDATA[0]]></is_configurable>
-    <need_instance><![CDATA[0]]></need_instance>
+    <is_configurable>1</is_configurable>
+    <need_instance>0</need_instance>
+    <limited_countries></limited_countries>
 </module>
