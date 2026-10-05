@@ -14,10 +14,11 @@ if (!defined('_PS_VERSION_')) {
  * Database access layer of the module. Every SQL statement of the module lives here.
  *
  * Tables:
- * - smartstock_product:     per-product activation and unit label.
+ * - smartstock_product:     per-product activation, unit label and low stock alert threshold.
  * - smartstock_combination: units consumed from the shared stock by one sale of a combination (ratio).
  * - smartstock_pool:        shared stock quantity, expressed in base units, per stock perimeter.
  * - smartstock_mirror:      last combination quantity accounted into the pool, per stock perimeter.
+ * - smartstock_movement:    journal of every pool change (sale, return, receipt, loss, inventory...).
  */
 class SmartStockRepository
 {
@@ -25,6 +26,7 @@ class SmartStockRepository
     const TABLE_COMBINATION = 'smartstock_combination';
     const TABLE_POOL = 'smartstock_pool';
     const TABLE_MIRROR = 'smartstock_mirror';
+    const TABLE_MOVEMENT = 'smartstock_movement';
     const LOCK_TIMEOUT_SECONDS = 10;
 
     /** @var array<int, array|null> Request-level cache of product configurations */
@@ -49,6 +51,7 @@ class SmartStockRepository
                 `id_product` INT(10) UNSIGNED NOT NULL,
                 `active` TINYINT(1) UNSIGNED NOT NULL DEFAULT 0,
                 `unit` VARCHAR(16) NOT NULL DEFAULT \'\',
+                `alert_threshold` INT(11) NOT NULL DEFAULT 0,
                 `date_add` DATETIME NOT NULL,
                 `date_upd` DATETIME NOT NULL,
                 PRIMARY KEY (`id_product`)
@@ -77,18 +80,48 @@ class SmartStockRepository
                 PRIMARY KEY (`id_product_attribute`, `id_shop`, `id_shop_group`),
                 KEY `id_product` (`id_product`)
             ) ENGINE=' . $engine . ' DEFAULT CHARSET=utf8mb4',
+            'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . self::TABLE_MOVEMENT . '` (
+                `id_smartstock_movement` INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+                `id_product` INT(10) UNSIGNED NOT NULL,
+                `id_product_attribute` INT(10) UNSIGNED NOT NULL DEFAULT 0,
+                `id_shop` INT(10) UNSIGNED NOT NULL DEFAULT 0,
+                `id_shop_group` INT(10) UNSIGNED NOT NULL DEFAULT 0,
+                `quantity_delta` INT(11) NOT NULL,
+                `quantity_after` INT(11) NOT NULL,
+                `reason` VARCHAR(32) NOT NULL,
+                `id_order` INT(10) UNSIGNED NOT NULL DEFAULT 0,
+                `id_employee` INT(10) UNSIGNED NOT NULL DEFAULT 0,
+                `comment` VARCHAR(255) NOT NULL DEFAULT \'\',
+                `date_add` DATETIME NOT NULL,
+                PRIMARY KEY (`id_smartstock_movement`),
+                KEY `product_scope_date` (`id_product`, `id_shop`, `id_shop_group`, `date_add`),
+                KEY `date_add` (`date_add`)
+            ) ENGINE=' . $engine . ' DEFAULT CHARSET=utf8mb4',
         ];
         foreach ($tableQueries as $tableQuery) {
             if (!$this->database->execute($tableQuery)) {
                 return false;
             }
         }
-        return true;
+        return $this->addMissingColumns();
+    }
+
+    /**
+     * Brings tables created by a previous version up to the current schema.
+     */
+    private function addMissingColumns(): bool
+    {
+        if ($this->columnExists(self::TABLE_PRODUCT, 'alert_threshold')) {
+            return true;
+        }
+        return $this->database->execute(
+            'ALTER TABLE `' . _DB_PREFIX_ . self::TABLE_PRODUCT . '` ADD `alert_threshold` INT(11) NOT NULL DEFAULT 0 AFTER `unit`'
+        );
     }
 
     public function dropTables(): bool
     {
-        $tableNames = [self::TABLE_PRODUCT, self::TABLE_COMBINATION, self::TABLE_POOL, self::TABLE_MIRROR];
+        $tableNames = [self::TABLE_PRODUCT, self::TABLE_COMBINATION, self::TABLE_POOL, self::TABLE_MIRROR, self::TABLE_MOVEMENT];
         foreach ($tableNames as $tableName) {
             if (!$this->database->execute('DROP TABLE IF EXISTS `' . _DB_PREFIX_ . $tableName . '`')) {
                 return false;
@@ -98,13 +131,13 @@ class SmartStockRepository
     }
 
     /**
-     * Returns the product configuration (active, unit) or null when the product was never configured.
+     * Returns the product configuration (active, unit, alert threshold) or null when the product was never configured.
      */
     public function getProductConfiguration(int $productId): ?array
     {
         if (!array_key_exists($productId, self::$productConfigurationCache)) {
             $configurationRow = $this->database->getRow(
-                'SELECT `id_product`, `active`, `unit` FROM `' . _DB_PREFIX_ . self::TABLE_PRODUCT . '`
+                'SELECT `id_product`, `active`, `unit`, `alert_threshold` FROM `' . _DB_PREFIX_ . self::TABLE_PRODUCT . '`
                 WHERE `id_product` = ' . $productId,
                 false
             );
@@ -112,6 +145,7 @@ class SmartStockRepository
                 'id_product' => (int) $configurationRow['id_product'],
                 'active' => (bool) $configurationRow['active'],
                 'unit' => (string) $configurationRow['unit'],
+                'alert_threshold' => (int) $configurationRow['alert_threshold'],
             ] : null;
         }
         return self::$productConfigurationCache[$productId];
@@ -123,13 +157,13 @@ class SmartStockRepository
         return $productConfiguration !== null && $productConfiguration['active'];
     }
 
-    public function saveProductConfiguration(int $productId, bool $isActive, string $unit): bool
+    public function saveProductConfiguration(int $productId, bool $isActive, string $unit, int $alertThreshold): bool
     {
         $currentDate = date('Y-m-d H:i:s');
         $result = $this->database->execute(
-            'INSERT INTO `' . _DB_PREFIX_ . self::TABLE_PRODUCT . '` (`id_product`, `active`, `unit`, `date_add`, `date_upd`)
-            VALUES (' . $productId . ', ' . (int) $isActive . ', \'' . pSQL($unit) . '\', \'' . $currentDate . '\', \'' . $currentDate . '\')
-            ON DUPLICATE KEY UPDATE `active` = VALUES(`active`), `unit` = VALUES(`unit`), `date_upd` = VALUES(`date_upd`)'
+            'INSERT INTO `' . _DB_PREFIX_ . self::TABLE_PRODUCT . '` (`id_product`, `active`, `unit`, `alert_threshold`, `date_add`, `date_upd`)
+            VALUES (' . $productId . ', ' . (int) $isActive . ', \'' . pSQL($unit) . '\', ' . max(0, $alertThreshold) . ', \'' . $currentDate . '\', \'' . $currentDate . '\')
+            ON DUPLICATE KEY UPDATE `active` = VALUES(`active`), `unit` = VALUES(`unit`), `alert_threshold` = VALUES(`alert_threshold`), `date_upd` = VALUES(`date_upd`)'
         );
         unset(self::$productConfigurationCache[$productId]);
         return $result;
@@ -290,6 +324,7 @@ class SmartStockRepository
         unset(self::$productConfigurationCache[$productId], self::$ratioCache[$productId]);
         return $this->deleteProductRuntimeState($productId)
             && $this->database->delete(self::TABLE_COMBINATION, '`id_product` = ' . $productId)
+            && $this->database->delete(self::TABLE_MOVEMENT, '`id_product` = ' . $productId)
             && $this->database->delete(self::TABLE_PRODUCT, '`id_product` = ' . $productId);
     }
 
@@ -381,6 +416,129 @@ class SmartStockRepository
             SET `quantity` = ' . $totalQuantity . ', `physical_quantity` = ' . $totalQuantity . ' + `reserved_quantity`
             WHERE `id_product` = ' . $productId . ' AND `id_product_attribute` = 0' . $scope->getSqlRestriction()
         );
+    }
+
+    /**
+     * Records a pool movement and returns its identifier.
+     */
+    public function insertMovement(int $productId, int $combinationId, SmartStockScope $scope, int $quantityDelta, int $quantityAfter, string $reason, int $employeeId, string $comment): int
+    {
+        $this->database->insert(self::TABLE_MOVEMENT, [
+            'id_product' => $productId,
+            'id_product_attribute' => $combinationId,
+            'id_shop' => $scope->getShopId(),
+            'id_shop_group' => $scope->getShopGroupId(),
+            'quantity_delta' => $quantityDelta,
+            'quantity_after' => $quantityAfter,
+            'reason' => pSQL($reason),
+            'id_employee' => $employeeId,
+            'comment' => pSQL(Tools::substr($comment, 0, 255)),
+            'date_add' => date('Y-m-d H:i:s'),
+        ]);
+        return (int) $this->database->Insert_ID();
+    }
+
+    /**
+     * Links movements to the order that caused them. A movement linked to an order is a sale or a restock, never a manual edit.
+     *
+     * @param int[] $movementIds
+     */
+    public function attachOrderToMovements(array $movementIds, int $orderId): bool
+    {
+        if (empty($movementIds) || $orderId <= 0) {
+            return true;
+        }
+        return $this->database->execute(
+            'UPDATE `' . _DB_PREFIX_ . self::TABLE_MOVEMENT . '`
+            SET `id_order` = ' . $orderId . ', `reason` = IF(`quantity_delta` < 0, \'' . SmartStockMovementReason::SALE . '\', \'' . SmartStockMovementReason::RESTOCK . '\')
+            WHERE `id_order` = 0 AND `id_product_attribute` > 0
+            AND `id_smartstock_movement` IN (' . implode(', ', array_map('intval', $movementIds)) . ')'
+        );
+    }
+
+    /**
+     * Latest movements, optionally restricted to a product and a perimeter, with the combination label resolved by the caller.
+     */
+    public function getMovements(?int $productId, ?SmartStockScope $scope, int $limit): array
+    {
+        $whereClause = '1';
+        if ($productId !== null) {
+            $whereClause .= ' AND m.`id_product` = ' . $productId;
+        }
+        if ($scope !== null) {
+            $whereClause .= $scope->getSqlRestriction('m');
+        }
+        $movementRows = $this->database->executeS(
+            'SELECT m.`id_smartstock_movement`, m.`id_product`, m.`id_product_attribute`, m.`quantity_delta`, m.`quantity_after`,
+                m.`reason`, m.`id_order`, m.`comment`, m.`date_add`, TRIM(CONCAT(IFNULL(e.`firstname`, \'\'), \' \', IFNULL(e.`lastname`, \'\'))) AS `employee_name`
+            FROM `' . _DB_PREFIX_ . self::TABLE_MOVEMENT . '` m
+            LEFT JOIN `' . _DB_PREFIX_ . 'employee` e ON e.`id_employee` = m.`id_employee`
+            WHERE ' . $whereClause . '
+            ORDER BY m.`id_smartstock_movement` DESC
+            LIMIT ' . max(1, $limit),
+            true,
+            false
+        );
+        $movements = [];
+        foreach ($movementRows ?: [] as $movementRow) {
+            $movements[] = [
+                'id' => (int) $movementRow['id_smartstock_movement'],
+                'id_product' => (int) $movementRow['id_product'],
+                'id_product_attribute' => (int) $movementRow['id_product_attribute'],
+                'quantity_delta' => (int) $movementRow['quantity_delta'],
+                'quantity_after' => (int) $movementRow['quantity_after'],
+                'reason' => (string) $movementRow['reason'],
+                'id_order' => (int) $movementRow['id_order'],
+                'employee_name' => (string) $movementRow['employee_name'],
+                'comment' => (string) $movementRow['comment'],
+                'date_add' => (string) $movementRow['date_add'],
+            ];
+        }
+        return $movements;
+    }
+
+    public function countMovementsSince(string $sinceDate): int
+    {
+        return (int) $this->database->getValue(
+            'SELECT COUNT(*) FROM `' . _DB_PREFIX_ . self::TABLE_MOVEMENT . '` WHERE `date_add` >= \'' . pSQL($sinceDate) . '\'',
+            false
+        );
+    }
+
+    /**
+     * Candidates for the configuration assistant: products with several combinations and no shared stock yet.
+     *
+     * @return array<int, array<int, string>> Combination labels indexed by product then combination identifier
+     */
+    public function getCandidateProductCombinations(int $languageId, int $productLimit): array
+    {
+        $combinationRows = $this->database->executeS(
+            'SELECT pa.`id_product`, pa.`id_product_attribute`,
+                GROUP_CONCAT(CONCAT(agl.`public_name`, \' - \', al.`name`) ORDER BY ag.`position` SEPARATOR \', \') AS `label`
+            FROM `' . _DB_PREFIX_ . 'product_attribute` pa
+            INNER JOIN (
+                SELECT cpa.`id_product` FROM `' . _DB_PREFIX_ . 'product_attribute` cpa
+                LEFT JOIN `' . _DB_PREFIX_ . self::TABLE_PRODUCT . '` sp ON sp.`id_product` = cpa.`id_product`
+                WHERE sp.`active` IS NULL OR sp.`active` = 0
+                GROUP BY cpa.`id_product` HAVING COUNT(*) >= 2
+                ORDER BY cpa.`id_product` DESC
+                LIMIT ' . max(1, $productLimit) . '
+            ) candidates ON candidates.`id_product` = pa.`id_product`
+            INNER JOIN `' . _DB_PREFIX_ . 'product_attribute_combination` pac ON pac.`id_product_attribute` = pa.`id_product_attribute`
+            INNER JOIN `' . _DB_PREFIX_ . 'attribute` a ON a.`id_attribute` = pac.`id_attribute`
+            INNER JOIN `' . _DB_PREFIX_ . 'attribute_group` ag ON ag.`id_attribute_group` = a.`id_attribute_group`
+            INNER JOIN `' . _DB_PREFIX_ . 'attribute_lang` al ON al.`id_attribute` = a.`id_attribute` AND al.`id_lang` = ' . $languageId . '
+            INNER JOIN `' . _DB_PREFIX_ . 'attribute_group_lang` agl ON agl.`id_attribute_group` = ag.`id_attribute_group` AND agl.`id_lang` = ' . $languageId . '
+            GROUP BY pa.`id_product`, pa.`id_product_attribute`
+            ORDER BY pa.`id_product` DESC, pa.`id_product_attribute`',
+            true,
+            false
+        );
+        $labelsByProduct = [];
+        foreach ($combinationRows ?: [] as $combinationRow) {
+            $labelsByProduct[(int) $combinationRow['id_product']][(int) $combinationRow['id_product_attribute']] = (string) $combinationRow['label'];
+        }
+        return $labelsByProduct;
     }
 
     /**

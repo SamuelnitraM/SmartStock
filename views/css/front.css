@@ -1,0 +1,69 @@
+/**
+ * SmartStock - Shared stock for product combinations.
+ *
+ * @author    SmartDev
+ * @copyright SmartDev
+ * @license   Commercial
+ */
+.smartstock-front {
+  margin: 1rem 0;
+}
+
+.smartstock-front-stock {
+  margin-bottom: 0.75rem;
+  font-weight: 600;
+  color: #2e7d32;
+}
+
+.smartstock-front-stock-low {
+  color: #c62828;
+}
+
+.smartstock-front-comparison {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.smartstock-front-comparison caption {
+  caption-side: top;
+  padding: 0 0 0.5rem;
+  font-weight: 600;
+  color: inherit;
+  text-align: left;
+}
+
+.smartstock-front-comparison th,
+.smartstock-front-comparison td {
+  padding: 0.4rem 0.5rem;
+  border-bottom: 1px solid #e5e5e5;
+  text-align: left;
+}
+
+.smartstock-front-selected {
+  background: #f4f8fb;
+  font-weight: 600;
+}
+
+.smartstock-front-unavailable {
+  color: #9e9e9e;
+}
+
+.smartstock-front-badge {
+  display: inline-block;
+  padding: 0.1rem 0.5rem;
+  border-radius: 1rem;
+  background: #eceff1;
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+
+.smartstock-front-badge-best {
+  background: #2e7d32;
+  color: #fff;
+}
+
+.smartstock-front-badge-out {
+  background: #ffebee;
+  color: #c62828;
+}

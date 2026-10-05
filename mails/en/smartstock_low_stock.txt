@@ -1,0 +1,6 @@
+Low shared stock
+
+The shared stock of {product_name} (#{product_id}) is down to {remaining}.
+Alert threshold: {threshold}. Think about restocking soon to avoid running out of every format.
+
+{shop_name}

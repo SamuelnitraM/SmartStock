@@ -99,7 +99,7 @@
   color: #c62828;
 }
 
-.smartstock-dashboard-heading {
+.smartstock-panel-heading {
   display: flex !important;
   align-items: center;
   justify-content: space-between;
@@ -136,4 +136,113 @@
 .smartstock-row-busy {
   opacity: 0.5;
   pointer-events: none;
+}
+
+.smartstock-row-low td {
+  background: #fff4f4 !important;
+}
+
+.smartstock-anchors {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.smartstock-kpis {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.smartstock-kpi {
+  flex: 1 1 180px;
+  padding: 16px;
+  border-radius: 6px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+.smartstock-kpi-value {
+  display: block;
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.smartstock-kpi-label {
+  color: #6c868e;
+}
+
+.smartstock-kpi-alert .smartstock-kpi-value {
+  color: #c62828;
+}
+
+.smartstock-format-independent {
+  background: #eceff1;
+}
+
+.smartstock-reason {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: #eceff1;
+  white-space: nowrap;
+}
+
+.smartstock-reason-sale {
+  background: #e3f2fd;
+}
+
+.smartstock-reason-restock,
+.smartstock-reason-receipt {
+  background: #e8f5e9;
+}
+
+.smartstock-reason-loss {
+  background: #ffebee;
+}
+
+.smartstock-reason-inventory,
+.smartstock-reason-activation {
+  background: #fff8e1;
+}
+
+.smartstock-negative {
+  color: #c62828;
+  font-weight: 600;
+}
+
+.smartstock-positive {
+  color: #2e7d32;
+  font-weight: 600;
+}
+
+.smartstock-nowrap {
+  white-space: nowrap;
+}
+
+.smartstock-history-block {
+  margin-top: 16px;
+}
+
+.smartstock-columns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 32px;
+}
+
+.smartstock-columns > div {
+  flex: 1 1 300px;
+}
+
+.smartstock-import-form {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.smartstock-settings-form .smartstock-field {
+  max-width: 520px;
+  margin: 12px 0;
 }

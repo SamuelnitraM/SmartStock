@@ -10,7 +10,7 @@
      data-smartstock-product
      data-ajax-url="{$smartstock_ajax_url|escape:'html':'UTF-8'}"
      data-state="{$smartstock_state_json|escape:'html':'UTF-8'}"
-     data-messages="{$smartstock_messages_json|escape:'html':'UTF-8'}">
+     data-configuration="{$smartstock_configuration_json|escape:'html':'UTF-8'}">
   <h3 class="smartstock-title">
     <i class="material-icons">inventory_2</i>
     {l s='Shared stock between combinations' mod='ps_smartstock'}
@@ -45,7 +45,12 @@
               <button type="button" class="btn btn-default btn-outline-secondary js-smartstock-apply-adjustment">{l s='Apply' mod='ps_smartstock'}</button>
             </span>
           </div>
-          <small class="smartstock-hint">{l s='Goods receipt or loss, applied immediately.' mod='ps_smartstock'}</small>
+          <small class="smartstock-hint">{l s='Goods receipt or loss, applied immediately and recorded in the history.' mod='ps_smartstock'}</small>
+        </div>
+        <div class="smartstock-field">
+          <label>{l s='Alert threshold' mod='ps_smartstock'} (<span class="js-smartstock-unit-label"></span>)</label>
+          <input type="number" min="0" step="1" class="form-control js-smartstock-threshold" placeholder="0">
+          <small class="smartstock-hint">{l s='Email alert and "only X left" message below this quantity. 0 disables it.' mod='ps_smartstock'}</small>
         </div>
       </div>
       <table class="table smartstock-table">
@@ -60,11 +65,35 @@
       </table>
       <p class="smartstock-hint">{l s='Set 0 to keep a combination on its own stock (gift box, sample...).' mod='ps_smartstock'}</p>
       <button type="button" class="btn btn-link js-smartstock-suggest">{l s='Fill from combination names' mod='ps_smartstock'}</button>
+      <div class="js-smartstock-history-block smartstock-history-block">
+        <h4>{l s='Latest movements' mod='ps_smartstock'}</h4>
+        <table class="table smartstock-table smartstock-history">
+          <thead>
+            <tr>
+              <th>{l s='Date' mod='ps_smartstock'}</th>
+              <th>{l s='Reason' mod='ps_smartstock'}</th>
+              <th>{l s='Movement' mod='ps_smartstock'}</th>
+              <th>{l s='Shared stock after' mod='ps_smartstock'}</th>
+              <th>{l s='Details' mod='ps_smartstock'}</th>
+            </tr>
+          </thead>
+          <tbody class="js-smartstock-history-rows"></tbody>
+        </table>
+      </div>
     </div>
     <div class="smartstock-actions">
       <span class="js-smartstock-feedback smartstock-feedback"></span>
       <button type="button" class="btn btn-primary js-smartstock-save">{l s='Save shared stock' mod='ps_smartstock'}</button>
     </div>
+    <template class="js-smartstock-history-template">
+      <tr>
+        <td class="smartstock-nowrap js-smartstock-history-date"></td>
+        <td class="js-smartstock-history-reason"></td>
+        <td class="smartstock-nowrap js-smartstock-history-delta"></td>
+        <td class="smartstock-nowrap js-smartstock-history-after"></td>
+        <td class="js-smartstock-history-details"></td>
+      </tr>
+    </template>
     <template class="js-smartstock-row-template">
       <tr>
         <td class="js-smartstock-row-name"></td>

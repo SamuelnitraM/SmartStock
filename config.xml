@@ -2,7 +2,7 @@
 <module>
     <name>ps_smartstock</name>
     <displayName><![CDATA[SmartStock - Shared stock for combinations]]></displayName>
-    <version><![CDATA[2.0.0]]></version>
+    <version><![CDATA[2.1.0]]></version>
     <description><![CDATA[Sells several formats of the same product (50 g, 100 g, 500 g...) from a single shared stock expressed in base units.]]></description>
     <author><![CDATA[SmartDev]]></author>
     <tab><![CDATA[administration]]></tab>
