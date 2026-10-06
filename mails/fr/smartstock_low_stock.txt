@@ -1,0 +1,6 @@
+Stock partagé bas
+
+Le stock partagé de {product_name} (n°{product_id}) n'est plus que de {remaining}.
+Seuil d'alerte : {threshold}. Pensez à réapprovisionner rapidement pour éviter la rupture de tous les formats.
+
+{shop_name}
